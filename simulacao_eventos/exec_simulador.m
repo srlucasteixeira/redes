@@ -1,6 +1,7 @@
 
 function Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_final)
 
+
   global eventos_executados;
     global DEBUG
     
@@ -27,6 +28,7 @@ function Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_final)
 
 
     if ~isempty(Novos_eventos)
+        plotEventos(Novos_eventos);
       Lista_eventos = [Lista_eventos;Novos_eventos];
     end
   end

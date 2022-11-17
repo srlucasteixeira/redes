@@ -10,7 +10,7 @@ function [NovosEventos] = executa_evento(evento, tempo_atual)
     taxa_dados = 1e5; % 100kbps
     erro_col = 0;
 
-    [t,tipo_evento, id, pct]= evento_desmonta(evento); % retorna os campos do 'evento'
+    [t,tipo_evento, id, pct, parent]= evento_desmonta(evento); % retorna os campos do 'evento'
 
     disp(['EV: ' tipo_evento ' @t=' num2str(t) ' id=' num2str(id)]);
 
@@ -26,36 +26,36 @@ function [NovosEventos] = executa_evento(evento, tempo_atual)
             pct =  struct('src', id, 'dst', 1, 'tam', 20, 'dados', []);
             
             if (pct.dst ~= id)   % evita enviar pacote para ele mesmo
-                e = evento_monta(tempo_atual, 'T_ini', id, pct);
+                e = evento_monta(tempo_atual, 'T_ini', id, pct, evento);
                 NovosEventos =[NovosEventos;e];
             end
             % exemplo: adiciona mais uma trasmissao na fila
             if erro_col ==1
-                e = evento_monta(tempo_atual, 'T_ini', id, pct);
+                e = evento_monta(tempo_atual, 'T_ini', id, pct, evento);
                 NovosEventos =[NovosEventos;e];
             end
 
       case 'T_ini' %inicio de transmissao
            if strcmp(nos(id).Tx, 'ocupado') % transmissor ocupado?
              tempo_entre_quadros = 0.2*8*pct.tam/taxa_dados; %20\% do tempo de transmissao
-             e = evento_monta(nos(id).ocupado_ate+tempo_entre_quadros, 'T_ini', id, pct);
+             e = evento_monta(nos(id).ocupado_ate+tempo_entre_quadros, 'T_ini', id, pct,evento);
              NovosEventos =[NovosEventos;e];
            else
              if pct.dst == 0 %pacote de broadcast
                 for nid = find(rede(id,:)>0) % envia uma copia do pacote para cada vizinho
                   disp(['INI T de ' num2str(id) ' para ' num2str(nid)]);
-                  e = evento_monta((tempo_atual+tempo_prop), 'R_ini', nid, pct);
+                  e = evento_monta((tempo_atual+tempo_prop), 'R_ini', nid, pct,evento);
                   NovosEventos =[NovosEventos;e];
                 end
              else % envia um pacote para o vizinho, se conectado
                 if find(rede(id,:) == pct.dst)
                   disp(['INI T de ' num2str(id) ' para ' num2str(pct.dst)]);
-                  e = evento_monta((tempo_atual+tempo_prop), 'R_ini', pct.dst, pct);
+                  e = evento_monta((tempo_atual+tempo_prop), 'R_ini', pct.dst, pct,evento);
                   NovosEventos =[NovosEventos;e];
                 end
              end
              tempo_transmissao = 8*pct.tam/taxa_dados;
-             e = evento_monta((tempo_atual+tempo_transmissao), 'T_fim', id, pct);
+             e = evento_monta((tempo_atual+tempo_transmissao), 'T_fim', id, pct,evento);
              NovosEventos =[NovosEventos;e];
              nos(id).Tx = 'ocupado';
              nos(id).ocupado_ate = tempo_atual+tempo_transmissao;
@@ -74,7 +74,7 @@ function [NovosEventos] = executa_evento(evento, tempo_atual)
                nos(id).Rx  = 'ocupado';
                nos(id).stat.rx = 1;
              end;
-             e = evento_monta((tempo_atual+8*pct.tam/taxa_dados), 'R_fim', id, pct);
+             e = evento_monta((tempo_atual+8*pct.tam/taxa_dados), 'R_fim', id, pct,evento);
              NovosEventos =[NovosEventos;e];
     case 'R_fim' %fim de recepcao
             nos(id).stat.rx =nos(id).stat.rx-1;

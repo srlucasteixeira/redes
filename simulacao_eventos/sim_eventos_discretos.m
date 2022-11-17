@@ -1,5 +1,5 @@
-clc; clear all; close all;
-
+clc; clear all;% close all;
+    figure(1); hold off
 
 % Inicia o gerador de numeros aleatorios
 rand('state', 0);
@@ -17,6 +17,7 @@ Log_eventos = [];
 global eventos_executados;
 eventos_executados = 0;
 
+global n;
 n=10; % numero de nos da rede
 global msg;
 msg = {'ola'};
