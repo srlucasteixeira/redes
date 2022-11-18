@@ -6,10 +6,11 @@ global taxa_bits;
 global tam_quadro;
 global duracao_RTS, global duracao_CTS, global duracao_ACK;
 NovosEventos = [];
-
+global tempo_entre_quadros;
 tempo_entre_quadros = 0.01*tam_quadro/taxa_bits; %20\% do tempo de transmissao
 % configuracao
 dist = 100; % 100m
+global tempo_prop;
 tempo_prop = dist/3e8; %tempo de propagacao = distancia/velocidade do sinal
 global taxa_bits;
 erro_col = 0;
@@ -58,7 +59,7 @@ switch tipo_evento
         
     case {'T_ini', 'T_ini_RETRY'} %inicio de transmissao ENVIANDO RTS
         if strcmp(nos(id).Tx, 'ocupado') % transmissor ocupado?
-            e = evento_monta(nos(id).ocupado_ate+tempo_entre_quadros, 'T_ini', id, pct,evento);
+            e = evento_monta(nos(id).ocupado_ate+tempo_entre_quadros, 'T_ini_RETRY', id, pct,evento);
             NovosEventos =[NovosEventos;e];
         else
             % verifica se canal está disponível ou se o canal virtual está
@@ -69,20 +70,26 @@ switch tipo_evento
                 e = evento_monta(tempo_atual+rand*max_nova_tentativa, 'T_ini_RETRY', id, pct, parent);
                 NovosEventos =[NovosEventos;e];
             else % canal disponível, envia RTS
-                for nid = find(rede(id,:)>0) % envia uma copia do pacote para cada vizinho
-                    %disp(['INI T_RTS de ' num2str(id) ' para ' num2str(nid)]);
-                    e = evento_monta((tempo_atual+tempo_entre_quadros+tempo_prop), 'R_RTS_ini', nid, pct,evento);
-                    NovosEventos =[NovosEventos;e];
-                end
-                tempo_transmissao = duracao_RTS;
-                e = evento_monta((tempo_atual+tempo_entre_quadros+tempo_transmissao), 'T_RTS_fim', id, pct,evento);
+                e = evento_monta((tempo_atual+tempo_entre_quadros), 'T_RTS_ini', id, pct,evento);
                 NovosEventos =[NovosEventos;e];
-                nos(id).Tx = 'ocupado';
-                nos(id).ocupado_ate = tempo_atual+tempo_entre_quadros+tempo_transmissao;
             end
         end
         
-    case 'T_RTS_fim' %fim de transmissao de RTS
+    case 'T_RTS_ini' % inicio de transmissao de RTS
+            for nid = find(rede(id,:)>0) % envia uma copia do pacote para cada vizinho
+                %disp(['INI T_RTS de ' num2str(id) ' para ' num2str(nid)]);
+                e = evento_monta((tempo_atual+tempo_prop), 'R_RTS_ini', nid, pct,evento);
+                NovosEventos =[NovosEventos;e];
+            end
+            tempo_transmissao = duracao_RTS;
+            e = evento_monta((tempo_atual+tempo_transmissao), 'T_RTS_fim', id, pct,evento);
+            NovosEventos =[NovosEventos;e];
+            nos(id).Tx = 'ocupado';
+            nos(id).ocupado_ate = tempo_atual+tempo_transmissao;
+        
+        
+        
+    case 'T_RTS_fim' % fim de transmissao de RTS
         %nos(id).stat.tx =nos(id).stat.tx+1;
         nos(id).Tx = 'desocupado';
         nos(id).Rx = 'espera_CTS';
@@ -144,11 +151,11 @@ switch tipo_evento
         % ASSUME canal virtual disponível, envia RTS
         for nid = find(rede(id,:)>0) % envia uma copia do pacote para cada vizinho
             %disp(['INI T_CTS de ' num2str(id) ' para ' num2str(nid)]);
-            e = evento_monta((tempo_atual+tempo_entre_quadros+tempo_prop), 'R_CTS_ini', nid, pct,evento);
+            e = evento_monta((tempo_atual+tempo_prop), 'R_CTS_ini', nid, pct,evento);
             NovosEventos =[NovosEventos;e];
         end
         tempo_transmissao = duracao_CTS;
-        e = evento_monta((tempo_atual+tempo_entre_quadros+tempo_transmissao), 'T_CTS_fim', id, pct,evento);
+        e = evento_monta((tempo_atual+tempo_transmissao), 'T_CTS_fim', id, pct,evento);
         NovosEventos =[NovosEventos;e];
         nos(id).Tx = 'ocupado';
         nos(id).ocupado_ate = tempo_atual+tempo_entre_quadros+tempo_transmissao;
@@ -157,7 +164,7 @@ switch tipo_evento
     case 'T_CTS_fim' %fim de transmissao de CTS
         %nos(id).stat.tx =nos(id).stat.tx+1;
         nos(id).Tx = 'desocupado';
-        nos(id).Rx = 'espera_dados';
+        nos(id).Rx = 'espera_DADOS';
         nos(id).ocupado_ate = 0;
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -279,7 +286,7 @@ switch tipo_evento
         % ASSUME  canal disponível, envia ACK
             for nid = find(rede(id,:)>0) % envia uma copia do pacote para cada vizinho
                 %disp(['INI T_RTS de ' num2str(id) ' para ' num2str(nid)]);
-                e = evento_monta(tempo_atual+tempo_entre_quadros+tempo_prop, 'R_ACK_ini', nid, pct,evento);
+                e = evento_monta(tempo_atual+tempo_prop, 'R_ACK_ini', nid, pct,evento);
                 NovosEventos =[NovosEventos;e];
             end
             tempo_transmissao = duracao_ACK;
@@ -343,6 +350,7 @@ switch tipo_evento
         
     case 'S_fim' %fim de simulacao
         disp('Simulacao encerrada!');
+        %error('Simulacao encerrada');
     case 'FIM_NAV'
          % libera canal virtual mesmo se não receber ACK
         nos(id).NAV_ate = 0;    % não gera outros eventos, só desliga a FLAG de NAV

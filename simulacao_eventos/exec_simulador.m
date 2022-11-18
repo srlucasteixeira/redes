@@ -25,8 +25,9 @@ function Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_final)
 
     Novos_eventos = executa_evento(ev, tempo_atual);    % Retorna os novos eventos apos executar o ultimo evento
     eventos_executados =eventos_executados+ 1;
-    plotEventos(ev,tempo_atual);
-
+    if (ev.id>0)
+        plotEventos(ev,tempo_atual);
+    end
     
     if ~isempty(Novos_eventos)
       Lista_eventos = [Lista_eventos;Novos_eventos];

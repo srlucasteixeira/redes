@@ -19,7 +19,7 @@ figure(1); hold off
  
 % Parametros principais
 global tempo_simulacao;
-tempo_simulacao = 100; % tempo de simulacao (segundos)
+tempo_simulacao =100; % tempo de simulacao (segundos)
 %número total de estações
 global num_estacoes;
 num_estacoes = 2;

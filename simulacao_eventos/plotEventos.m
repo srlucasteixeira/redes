@@ -28,6 +28,7 @@ for i=1:length(Novos_eventos)
     
 end
 % xlim(xlim+[-0.1 +0.1])
-ylim(round(ylim)+[-0.1 +0.1])
+global num_estacoes
+ylim([0.1 num_estacoes+1] )
 xlim([0 tempo_atual+0.1])
 end
