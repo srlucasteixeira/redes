@@ -58,8 +58,11 @@ switch tipo_evento
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
     case {'T_ini', 'T_ini_RETRY'} %inicio de transmissao ENVIANDO RTS
+        if strcmp(tipo_evento, 'T_ini_RETRY')
+            %keyboard
+        end
         if strcmp(nos(id).Tx, 'ocupado') % transmissor ocupado?
-            e = evento_monta(nos(id).ocupado_ate+tempo_entre_quadros, 'T_ini_RETRY', id, pct,evento);
+            e = evento_monta(nos(id).ocupado_ate+tempo_entre_quadros, 'T_ini_RETRY', id, pct,parent);
             NovosEventos =[NovosEventos;e];
         else
             % verifica se canal está disponível ou se o canal virtual está
@@ -226,7 +229,7 @@ switch tipo_evento
         end
         % monta seu evento de fim de transmissão
         tempo_transmissao = pct.tam/taxa_bits;
-        e = evento_monta((tempo_atual+tempo_transmissao), 'T_DADOS_fim', id, pct,evento);
+        e = evento_monta((tempo_atual+tempo_transmissao), 'T_dados_fim', id, pct,evento);
         NovosEventos =[NovosEventos;e];
         nos(id).Tx = 'ocupado';
         nos(id).ocupado_ate = tempo_atual+tempo_transmissao;
@@ -322,7 +325,6 @@ switch tipo_evento
         if strcmp(nos(id).Rx, 'ocupado') || strcmp(nos(id).Rx, 'espera_ACK')
             disp(['R_ACK_fim de ' num2str(pct.src) ' para ' num2str(pct.dst)]);
             %if ~isempty(pct); disp(pct); end;
-            nos(id).Rx  = 'desocupado';
             %nos(id).stat.rxok=nos(id).stat.rxok+1;
             nos(id).stat.rx = 0;
             nos(id).NAV_ate = 0; % libera canal virtual
@@ -331,6 +333,7 @@ switch tipo_evento
                 X = pct.src; pct.src = pct.dst; pct.dst = X; % inverte origem e destino    POR ULTIMA VEZ!    
                 fprintf('Pacote entregue com sucesso de %d para %d',pct.srt,pct.dst);
             end
+            nos(id).Rx  = 'desocupado';
         elseif  strcmp(nos(id).Rx, 'colisao')
             if(nos(id).stat.rx == 0)
                 nos(id).Rx  = 'desocupado';

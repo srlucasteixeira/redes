@@ -19,10 +19,10 @@ figure(1); hold off
  
 % Parametros principais
 global tempo_simulacao;
-tempo_simulacao =100; % tempo de simulacao (segundos)
+tempo_simulacao =1000; % tempo de simulacao (segundos)
 %número total de estações
 global num_estacoes;
-num_estacoes = 2;
+num_estacoes = 5;
 %taxa de transmissão do meio em bits por segundo
 global taxa_bits;
 taxa_bits = 1;
@@ -45,7 +45,7 @@ duracao_ACK=duracao_RTS;
 global taxa_max_quadro;
 taxa_max_quadro=(taxa_bits/tam_quadro/num_estacoes);
 global fracao_taxa_quadro;
-fracao_taxa_quadro = 0.2;
+fracao_taxa_quadro = 0.3;
 global taxa_quadro_atual;
 taxa_quadro_atual = taxa_max_quadro * fracao_taxa_quadro;
 %%
@@ -86,6 +86,12 @@ Lista_eventos = config_sim(num_estacoes, tempo_simulacao);
 
 % Executa a simulacao
 Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_simulacao);
+for i=1:length (Log_eventos)
+   ev = Log_eventos(i);
+    if (ev.id>0)
+        plotEventos(ev,ev.instante);
+    end
+end
 %print_struct_array_contents(1);
 %Log_eventos(:).instante
 %Log_eventos(:).tipo
