@@ -1,12 +1,60 @@
 clc; clear all;% close all;
     figure(1); hold off
+    
+    disp('    Simulação CDMA/CA em rede sem fio')
+    disp('    Condições da simulação:')
+    disp('    1-Todos pacotes são enviados em broadcast')
+    disp('    2-Existe canal virtual por meio de requisicoes RTS/CTS (Request to Send/Clear to Send).')
+    disp('    3-Cada nó mantém o status reconhecendo canal virtual ocupado:')
+    disp('       Nó fonte envia RTS')
+    disp('       Nó destino responde CTS')
+    disp('       Nó fonte envia dados')
+    disp('       Nó destino responde ACK')
+    
+    
+%PARAMETROS DE SIMULAÇÃO - geração aleatória de transmissões
+%global n;       n=10; % numero de nos da rede % substituído por num_estacoes
+%simulação do protocolo CDMA/CA
+%número total de estações
+global num_estacoes;
+num_estacoes = 3;
+%taxa de transmissão do meio em bits por segundo
+global taxa_bits;
+taxa_bits = 1e3;
+%tamanho médio do quadro em bits
+global tam_quadro;
+tam_quadro = 20;
+global desv_pad_quadro;
+desv_pad_quadro = 10;
+%tempo de transmissão do quadro em segundos
+%global t_quadro;
+%t_quadro = tam_quadro/taxa_bits;
+% FRAÇÃO da taxa de dados total produzida
+global taxa_max_quadro;
+taxa_max_quadro=ceil(taxa_bits/tam_quadro/num_estacoes);
+global fracao_taxa_quadro;
+fracao_taxa_quadro = 0.2;
+global taxa_quadro_atual;
+taxa_quadro_atual = taxa_max_quadro * fracao_taxa_quadro
+%%
 
+
+
+
+% resultados da simulação
+quadros_transmitidos = 0;
+quadros_entregues = 0;
+quadros_gerados = 0;
+quadros_colididos = 0;
+
+    
 % Inicia o gerador de numeros aleatorios
 rand('state', 0);
 %prevS = rng(0)
  
 % Parametros principais
-tempo_simulacao = 1; % tempo de simulacao
+global tempo_simulacao;
+tempo_simulacao = 1; % tempo de simulacao (segundos)
 
 global DEBUG;
 DEBUG=1;
@@ -17,18 +65,16 @@ Log_eventos = [];
 global eventos_executados;
 eventos_executados = 0;
 
-global n;
-n=10; % numero de nos da rede
-global msg;
-msg = {'ola'};
+global msg;     msg = {'ola'};
 global rede; % matriz de conectividade da rede
-rede = ~eye(n); % matriz de conectividade da rede
-global nos;
-nos = [];
+                rede = ~eye(num_estacoes); % matriz de conectividade da rede
+global nos;     nos = [];% estados dos nós da rede
 
-%% Configura a simulacao
+%% Configura a simulacao por eventos
 tempo_inicial = clock;
-Lista_eventos = config_sim(n, tempo_simulacao);
+Lista_eventos = config_sim(num_estacoes, tempo_simulacao);
+
+
 
 % Executa a simulacao
 Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_simulacao);

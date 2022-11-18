@@ -7,7 +7,7 @@ function [NovosEventos] = executa_evento(evento, tempo_atual)
     % configuracao
     dist = 100; % 100m
     tempo_prop = dist/3e8; %tempo de propagacao = distancia/velocidade do sinal
-    taxa_dados = 1e5; % 100kbps
+    global taxa_bits;
     erro_col = 0;
 
     [t,tipo_evento, id, pct, parent]= evento_desmonta(evento); % retorna os campos do 'evento'
@@ -20,41 +20,56 @@ function [NovosEventos] = executa_evento(evento, tempo_atual)
             nos(id).Rx = 'desocupado';
             nos(id).ocupado_ate = 0;
             nos(id).stat = struct('tx', 0, 'rx', 0, 'rxok', 0, 'col', 0);
+            nos(id).fila=0; % inicializa sem pacotes na fila
 
-            % adiciona uma trasmissao na fila
-            % pacote contem origem (src), destino (dst), tamanho (tam) e os dados
-            pct =  struct('src', id, 'dst', 1, 'tam', 20, 'dados', []);
-            
-            if (pct.dst ~= id)   % evita enviar pacote para ele mesmo
-                e = evento_monta(tempo_atual, 'T_ini', id, pct, evento);
+            % qual a probabilidade de enviar um novo pacote? Criar evento
+            % na próxima vez que um pacote entrar na fila
+%             p_novo=rand(1);
+%             % adiciona uma trasmissao na fila
+%             % pacote contem origem (src), destino (dst), tamanho (tam) e os dados
+%             pct =  struct('src', id, 'dst', 1, 'tam', 20, 'dados', []);
+% 
+%             if (pct.dst ~= id)   % evita enviar pacote para ele mesmo
+%                 e = evento_monta(tempo_atual, 'T_ini', id, pct, evento);
+%                 NovosEventos =[NovosEventos;e];
+%             end
+%             end
+%             % exemplo: adiciona mais uma trasmissao na fila
+%             if erro_col ==1
+%                 e = evento_monta(tempo_atual, 'T_ini', id, pct, evento);
+%                 NovosEventos =[NovosEventos;e];
+%             end
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+        case 'N_pct' % Momento em que um novo pacote foi gerado
+           if strcmp(nos(id).Tx, 'ocupado') | strcmp(nos(id).Rx, 'ocupado') % ocupado?
+                nos(id).fila=nos(id).fila+1; % adiciona pacotes na fila
+           else
+                % agenda novo pacote para ser gerado imediatamente
+                e = evento_monta(tempo_atual, 'T_ini', id, pct, []);
                 NovosEventos =[NovosEventos;e];
-            end
-            % exemplo: adiciona mais uma trasmissao na fila
-            if erro_col ==1
-                e = evento_monta(tempo_atual, 'T_ini', id, pct, evento);
-                NovosEventos =[NovosEventos;e];
-            end
-
-      case 'T_ini' %inicio de transmissao
+           end
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+           
+        case 'T_ini' %inicio de transmissao
            if strcmp(nos(id).Tx, 'ocupado') % transmissor ocupado?
-             tempo_entre_quadros = 0.2*8*pct.tam/taxa_dados; %20\% do tempo de transmissao
+             tempo_entre_quadros = 0.2*8*pct.tam/taxa_bits; %20\% do tempo de transmissao
              e = evento_monta(nos(id).ocupado_ate+tempo_entre_quadros, 'T_ini', id, pct,evento);
              NovosEventos =[NovosEventos;e];
            else
-             if pct.dst == 0 %pacote de broadcast
-                for nid = find(rede(id,:)>0) % envia uma copia do pacote para cada vizinho
-                  disp(['INI T de ' num2str(id) ' para ' num2str(nid)]);
-                  e = evento_monta((tempo_atual+tempo_prop), 'R_ini', nid, pct,evento);
-                  NovosEventos =[NovosEventos;e];
-                end
-             else % envia um pacote para o vizinho, se conectado
-                if find(rede(id,:) == pct.dst)
-                  disp(['INI T de ' num2str(id) ' para ' num2str(pct.dst)]);
-                  e = evento_monta((tempo_atual+tempo_prop), 'R_ini', pct.dst, pct,evento);
-                  NovosEventos =[NovosEventos;e];
-                end
-             end
-             tempo_transmissao = 8*pct.tam/taxa_dados;
+             %if pct.dst == 0 %pacote de broadcast
+            for nid = find(rede(id,:)>0) % envia uma copia do pacote para cada vizinho
+              disp(['INI T de ' num2str(id) ' para ' num2str(nid)]);
+              e = evento_monta((tempo_atual+tempo_prop), 'R_ini', nid, pct,evento);
+              NovosEventos =[NovosEventos;e];
+            end
+             %else % envia um pacote para o vizinho, se conectado
+             %   if find(rede(id,:) == pct.dst)
+             %     disp(['INI T de ' num2str(id) ' para ' num2str(pct.dst)]);
+             %     e = evento_monta((tempo_atual+tempo_prop), 'R_ini', pct.dst, pct,evento);
+             %     NovosEventos =[NovosEventos;e];
+             %   end
+             %end
+             tempo_transmissao = 8*pct.tam/taxa_bits;
              e = evento_monta((tempo_atual+tempo_transmissao), 'T_fim', id, pct,evento);
              NovosEventos =[NovosEventos;e];
              nos(id).Tx = 'ocupado';
@@ -64,6 +79,13 @@ function [NovosEventos] = executa_evento(evento, tempo_atual)
              nos(id).stat.tx =nos(id).stat.tx+1;
              nos(id).Tx = 'desocupado';
              nos(id).ocupado_ate = 0;
+             if (nos(id).fila > 0)  % existem mais pacotes para transmitir
+               % agenda novo pacote para ser gerado imediatamente
+               e = evento_monta(tempo_atual, 'T_ini', id, pct, []);
+               NovosEventos =[NovosEventos;e]; 
+               nos(id).fila=nos(id).fila-1;                
+             end
+     %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
       case 'R_ini' %inicio de recepcao
              %if ~isempty(pct); disp(pct); end;
              if strcmp(nos(id).Rx, 'ocupado') ||  strcmp(nos(id).Rx, 'colisao')
@@ -74,7 +96,7 @@ function [NovosEventos] = executa_evento(evento, tempo_atual)
                nos(id).Rx  = 'ocupado';
                nos(id).stat.rx = 1;
              end;
-             e = evento_monta((tempo_atual+8*pct.tam/taxa_dados), 'R_fim', id, pct,evento);
+             e = evento_monta((tempo_atual+8*pct.tam/taxa_bits), 'R_fim', id, pct,evento);
              NovosEventos =[NovosEventos;e];
     case 'R_fim' %fim de recepcao
             nos(id).stat.rx =nos(id).stat.rx-1;
@@ -93,6 +115,13 @@ function [NovosEventos] = executa_evento(evento, tempo_atual)
             else
               disp('ERRO: Estado Rx errado.');
             end
+             if (nos(id).fila > 0)  % existem mais pacotes para transmitir
+               % agenda novo pacote para ser gerado imediatamente
+               e = evento_monta(tempo_atual, 'T_ini', id, pct, []);
+               NovosEventos =[NovosEventos;e];           
+               nos(id).fila=nos(id).fila-1;
+             end
+       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
        case 'S_fim' %fim de simulacao
              disp('Simulacao encerrada!');
         otherwise
