@@ -1,5 +1,6 @@
-clc; clear all;% close all;
-    figure(1); hold off
+%clc;
+clear;% close all;
+figure(1); hold off
     
     disp('    Simulação CDMA/CA em rede sem fio')
     disp('    Condições da simulação:')
@@ -14,28 +15,39 @@ clc; clear all;% close all;
     
 %PARAMETROS DE SIMULAÇÃO - geração aleatória de transmissões
 %global n;       n=10; % numero de nos da rede % substituído por num_estacoes
-%simulação do protocolo CDMA/CA
+%simulação do protocolo CSMA/CA
+ 
+% Parametros principais
+global tempo_simulacao;
+tempo_simulacao = 100; % tempo de simulacao (segundos)
 %número total de estações
 global num_estacoes;
-num_estacoes = 3;
+num_estacoes = 2;
 %taxa de transmissão do meio em bits por segundo
 global taxa_bits;
-taxa_bits = 1e3;
+taxa_bits = 1;
 %tamanho médio do quadro em bits
 global tam_quadro;
 tam_quadro = 20;
 global desv_pad_quadro;
 desv_pad_quadro = 10;
+global max_nova_tentativa;  % tempo max. para esperar por liberação do canal
+max_nova_tentativa = 10*tam_quadro;
+% duração de pacotes auxiliares
+global duracao_RTS, global duracao_CTS, global duracao_ACK;
+duracao_RTS=tam_quadro/20/taxa_bits;    % 5% do quadro médio
+duracao_CTS=duracao_RTS;
+duracao_ACK=duracao_RTS;
 %tempo de transmissão do quadro em segundos
 %global t_quadro;
 %t_quadro = tam_quadro/taxa_bits;
 % FRAÇÃO da taxa de dados total produzida
 global taxa_max_quadro;
-taxa_max_quadro=ceil(taxa_bits/tam_quadro/num_estacoes);
+taxa_max_quadro=(taxa_bits/tam_quadro/num_estacoes);
 global fracao_taxa_quadro;
 fracao_taxa_quadro = 0.2;
 global taxa_quadro_atual;
-taxa_quadro_atual = taxa_max_quadro * fracao_taxa_quadro
+taxa_quadro_atual = taxa_max_quadro * fracao_taxa_quadro;
 %%
 
 
@@ -51,10 +63,6 @@ quadros_colididos = 0;
 % Inicia o gerador de numeros aleatorios
 rand('state', 0);
 %prevS = rng(0)
- 
-% Parametros principais
-global tempo_simulacao;
-tempo_simulacao = 1; % tempo de simulacao (segundos)
 
 global DEBUG;
 DEBUG=1;

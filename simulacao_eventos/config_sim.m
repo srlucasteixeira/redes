@@ -13,7 +13,9 @@ function Lista_eventos = config_sim(n, tempo_simulacao)
   global taxa_quadro_atual;
   global tam_quadro;
   global desv_pad_quadro;
-  global tempo_simulacao;
+  if (round(tempo_simulacao*taxa_quadro_atual))<1
+      error('Tempo muito curto de simulação para a taxa de dados e quadro desejada!')
+  end
     % cria todas as transmissões que ocorrerão
   for id=1:n  % para todos os nós
     for b=1:round(tempo_simulacao*taxa_quadro_atual) % tempo_simulacao  a quantidade provável
