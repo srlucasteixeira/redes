@@ -1,6 +1,16 @@
 %clc;
 clear;% close all;
-figure(1); hold off
+figure(1); hold off;
+
+%inicializa plot(0,0) com legenda
+legenda=mapeiaEventoSimbolo([1 1]);
+for i=1:length(legenda.string)
+    plot(0,0,[ legenda.valores(i) 'k']);
+    hold on
+end
+legend(legenda.string , ...
+    'Location','EastOutside');
+    
     
     disp('    Simulação CDMA/CA em rede sem fio')
     disp('    Condições da simulação:')

@@ -229,12 +229,12 @@ switch tipo_evento
         end
         % monta seu evento de fim de transmissão
         tempo_transmissao = pct.tam/taxa_bits;
-        e = evento_monta((tempo_atual+tempo_transmissao), 'T_dados_fim', id, pct,evento);
+        e = evento_monta((tempo_atual+tempo_transmissao), 'T_DADOS_fim', id, pct,evento);
         NovosEventos =[NovosEventos;e];
         nos(id).Tx = 'ocupado';
         nos(id).ocupado_ate = tempo_atual+tempo_transmissao;
                
-    case 'T_dados_fim' %fim de transmissao
+    case 'T_DADOS_fim' %fim de transmissao
         nos(id).stat.tx =nos(id).stat.tx+1;
         nos(id).Tx = 'desocupado';
         nos(id).ocupado_ate = 0;
