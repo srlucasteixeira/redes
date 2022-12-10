@@ -7,16 +7,16 @@ global tam_quadro;
 global duracao_RTS, global duracao_CTS, global duracao_ACK;
 NovosEventos = [];
 global tempo_entre_quadros;
-tempo_entre_quadros = 0.01*tam_quadro/taxa_bits; %20\% do tempo de transmissao
-% configuracao
-dist = 100; % 100m
 global tempo_prop;
-tempo_prop = dist/3e8; %tempo de propagacao = distancia/velocidade do sinal
 global taxa_bits;
 erro_col = 0;
 
 [t,tipo_evento, id, pct, parent]= evento_desmonta(evento); % retorna os campos do 'evento'
-
+if (size(pct)>0)
+    if (id ~= pct.src) && (evento.tipo(1)=='T') 
+        disp('Ops!')
+    end
+end
 disp(['EV: ' tipo_evento ' @t=' num2str(t) ' id=' num2str(id)]);
 %keyboard
 switch tipo_evento
@@ -27,7 +27,8 @@ switch tipo_evento
         nos(id).stat = struct('tx', 0, 'rx', 0, 'rxok', 0, 'col', 0);
         nos(id).fila=0; % inicializa sem pacotes na fila
         nos(id).NAV_ate=-1;% inicializa sem estar ocupado o canal
-        
+        nos(id).stat.total_dados_enviados=0;
+        nos(id).stat.total_dados_recebidos=0;
         % qual a probabilidade de enviar um novo pacote? Criar evento
         % na próxima vez que um pacote entrar na fila
         %             p_novo=rand(1);
@@ -121,7 +122,7 @@ switch tipo_evento
             nos(id).Rx  = 'desocupado';
             %nos(id).stat.rxok=nos(id).stat.rxok+1;
             nos(id).stat.rx = 0;
-            nos(id).NAV_ate = tempo_atual + pct.tam/taxa_bits + duracao_CTS + duracao_ACK + 3* tempo_entre_quadros;
+            nos(id).NAV_ate = tempo_atual + pct.tam/taxa_bits + duracao_CTS + duracao_ACK + 3* (tempo_entre_quadros+tempo_prop);
             e = evento_monta(nos(id).NAV_ate, 'FIM_NAV', id, pct, evento);
             NovosEventos =[NovosEventos;e];
             if (pct.dst == id ) % destino a estes dispositivo
@@ -139,14 +140,16 @@ switch tipo_evento
                 %disp(['EV: COLISAO ACABOU no nó ' num2str(id) ' durante RTS'])
             end
         else
-            disp('ERRO: Estado Rx errado.');
+            warning('ERRO: Estado Rx errado.');
+            nos(id).NAV_ate=0;
+            nos(id).Rx  = 'colisao';
         end
-        if (nos(id).fila > 0)  % existem mais pacotes para transmitir
-            % agenda novo pacote para ser gerado imediatamente
-            e = evento_monta(tempo_atual, 'T_ini', id, pct, []);
-            NovosEventos =[NovosEventos;e];
-            nos(id).fila=nos(id).fila-1;
-        end
+%         if (nos(id).fila > 0)  % existem mais pacotes para transmitir
+%             % agenda novo pacote para ser gerado imediatamente
+%             e = evento_monta(tempo_atual, 'T_ini', id, pct, []);
+%             NovosEventos =[NovosEventos;e];
+%             nos(id).fila=nos(id).fila-1;
+%         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -192,7 +195,7 @@ switch tipo_evento
             %if ~isempty(pct); disp(pct); end;
             %nos(id).stat.rxok=nos(id).stat.rxok+1;
             nos(id).stat.rx = 0;
-            nos(id).NAV_ate = tempo_atual + pct.tam/taxa_bits + duracao_ACK + 2* tempo_entre_quadros;
+            nos(id).NAV_ate = tempo_atual + pct.tam/taxa_bits + duracao_ACK + 2* (tempo_entre_quadros+tempo_prop);
             e = evento_monta(nos(id).NAV_ate, 'FIM_NAV', id, pct, evento);
             NovosEventos =[NovosEventos;e];
             if (pct.dst == id ) & strcmp(nos(id).Rx, 'espera_CTS') % destino a estes dispositivo
@@ -210,7 +213,7 @@ switch tipo_evento
                 %disp(['EV: COLISAO ACABOU no nó ' num2str(id) ' durante RTS'])
             end
         else
-            disp('ERRO: Estado Rx errado.');
+            warning('ERRO: Estado Rx errado.');
         end
         if (nos(id).fila > 0)  % existem mais pacotes para transmitir
             % agenda novo pacote para ser gerado imediatamente
@@ -247,7 +250,7 @@ switch tipo_evento
         if strcmp(nos(id).Rx, 'ocupado') ||  strcmp(nos(id).Rx, 'colisao')
             nos(id).Rx  = 'colisao';
             nos(id).stat.rx =nos(id).stat.rx+1;
-            disp(['EV: COLISAO INICIA no nó ' num2str(id)])
+            disp(['EV: COLISAO INICIA no nó ' num2str(id) ' (' sprintf('%3.2f',tempo_atual*1000) 'ms'])
         else
             if ~ strcmp(nos(id).Rx, 'espera_DADOS')  nos(id).Rx  = 'ocupado';  end 
             nos(id).stat.rx = 1;
@@ -276,7 +279,7 @@ switch tipo_evento
                 disp(['EV: COLISAO ACABOU no nó ' num2str(id)])
             end
         else
-            disp('ERRO: Estado Rx errado.');
+            warning('ERRO: Estado Rx errado.');
         end
         if (nos(id).fila > 0)  % existem mais pacotes para transmitir
             % agenda novo pacote para ser gerado imediatamente
@@ -342,7 +345,7 @@ switch tipo_evento
                 %disp(['EV: COLISAO ACABOU no nó ' num2str(id) ' durante RTS'])
             end
         else
-            disp('ERRO: Estado Rx errado.');
+            warning('ERRO: Estado Rx errado.');
         end
         if (nos(id).fila > 0)  % existem mais pacotes para transmitir
             % agenda novo pacote para ser gerado imediatamente

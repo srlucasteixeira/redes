@@ -5,21 +5,35 @@ end
 global nos;
 for i=1:length(Novos_eventos)
     e=Novos_eventos(i);
+    if nargin<2
+        tempo_atual=e.instante;
+    end
     global num_estacoes
     cm=colormap(hsv(num_estacoes));% cria mapa de cores
     %keyboard
     simbolo=mapeiaEventoSimbolo(e);
+    if e.id==0
+        break
+    end
+    cor = cm(e.id,:);
     plot(e.instante,e.id,simbolo, ...
     'LineWidth',1, ...
     'MarkerEdgeColor','k', ...
-    'MarkerFaceColor',cm(e.id,:));
+    'MarkerFaceColor',cor);
     hold on; grid on;
-    if (0) % escreve nome dos tipos de eventos
-        texto=[e.tipo ' ' num2str(e.id) ' (' num2str(nos(e.id).fila) ')'];
+    if (1) % escreve nome dos tipos de eventos
+        if size(e.pct)>0
+            pcttxt=[num2str(e.pct.src) '>' num2str(e.pct.dst)]; 
+        else
+            pcttxt=[];
+        end
+        texto=[e.tipo ' ' num2str(e.id) ' ' pcttxt ' (' num2str(nos(e.id).fila) ')'];
         texto=strrep(texto,'_','\_');
-        h=text(e.instante,e.id+0.1,texto);
-        set(h,'Rotation',75)
-        set(h,'FontSize',10)
+        h=text(e.instante,e.id+0.1,texto,...
+            'Rotation',75,...
+            'FontSize',10,...
+            'Clipping', 'on','hittest', 'off');
+
     end
     if strfind(e.tipo,'_fim')
         % desenha linha desde inicio da ocorrencia que criou este evento
@@ -43,13 +57,5 @@ for i=1:length(Novos_eventos)
 %         anArrow.Position = [e.instante, e.id, e.instante, e.parent.id];
 %         clear anArrow;
 %     end
-end
-% xlim(xlim+[-0.1 +0.1])
-global num_estacoes
-persistent def_lims;
-if size(def_lims)==0
-    ylim([0.1 num_estacoes+1] )
-    %xlim([0 tempo_atual+0.1])
-    def_lims=1;
 end
 end

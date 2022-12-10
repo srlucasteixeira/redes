@@ -29,23 +29,23 @@ legend(legenda.string , ...
  
 % Parametros principais
 global tempo_simulacao;
-tempo_simulacao =1000; % tempo de simulacao (segundos)
+tempo_simulacao =0.3/1000; % tempo de simulacao (segundos)
 %número total de estações
 global num_estacoes;
 num_estacoes = 5;
 %taxa de transmissão do meio em bits por segundo
 global taxa_bits;
-taxa_bits = 1;
+taxa_bits = 1e6;
 %tamanho médio do quadro em bits
-global tam_quadro;
-tam_quadro = 20;
+global tam_quadro;  % em bits
+tam_quadro = 100;
 global desv_pad_quadro;
 desv_pad_quadro = 10;
 global max_nova_tentativa;  % tempo max. para esperar por liberação do canal
-max_nova_tentativa = 10*tam_quadro;
+max_nova_tentativa = 10*tam_quadro/taxa_bits;
 % duração de pacotes auxiliares
 global duracao_RTS, global duracao_CTS, global duracao_ACK;
-duracao_RTS=tam_quadro/20/taxa_bits;    % 5% do quadro médio
+duracao_RTS=tam_quadro/taxa_bits/100;    % 1% do quadro médio
 duracao_CTS=duracao_RTS;
 duracao_ACK=duracao_RTS;
 %tempo de transmissão do quadro em segundos
@@ -54,10 +54,20 @@ duracao_ACK=duracao_RTS;
 % FRAÇÃO da taxa de dados total produzida
 global taxa_max_quadro;
 taxa_max_quadro=(taxa_bits/tam_quadro/num_estacoes);
-global fracao_taxa_quadro;
-fracao_taxa_quadro = 0.3;
+global fracao_taxa_quadro;  % fração da taxa máxima de dados gerada
+fracao_taxa_quadro = 2;
 global taxa_quadro_atual;
 taxa_quadro_atual = taxa_max_quadro * fracao_taxa_quadro;
+
+
+% configuracao geométrica
+dist = 600; % m
+global tempo_prop;
+tempo_prop = dist/3e8; %tempo de propagacao = distancia/velocidade do sinal
+
+global tempo_entre_quadros;
+tempo_entre_quadros = 2*tempo_prop+0.001*tam_quadro/taxa_bits; %20\% do tempo de transmissao
+
 %%
 
 
@@ -90,18 +100,27 @@ global nos;     nos = [];% estados dos nós da rede
 
 %% Configura a simulacao por eventos
 tempo_inicial = clock;
+global Lista_eventos
 Lista_eventos = config_sim(num_estacoes, tempo_simulacao);
 
-
+disp('Alterando Lista de eventos para forçar colisão')
+%Lista_eventos
 
 % Executa a simulacao
 Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_simulacao);
-for i=1:length (Log_eventos)
-   ev = Log_eventos(i);
-    if (ev.id>0)
-        plotEventos(ev,ev.instante);
-    end
-end
+
+ylim([0 0.001] );
+xlim([0 0.001] );
+% for i=1:length (Log_eventos)
+%    ev = Log_eventos(i);
+%     if (ev.id>0)
+%         plotEventos(ev,ev.instante);
+%     end
+% end
+plotEventos(Log_eventos);
+
+ylim([0.1 num_estacoes+0.5])
+xlim([Log_eventos(1).instante Log_eventos(end).instante] );
 %print_struct_array_contents(1);
 %Log_eventos(:).instante
 %Log_eventos(:).tipo

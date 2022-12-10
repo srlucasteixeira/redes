@@ -28,7 +28,9 @@ function Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_final)
 %     if (ev.id>0)
 %         plotEventos(ev,tempo_atual);
 %     end
-    
+    for k=1:length(Novos_eventos)
+       Novos_eventos(k).parent=ev;
+    end
     if ~isempty(Novos_eventos)
       Lista_eventos = [Lista_eventos;Novos_eventos];
     end
