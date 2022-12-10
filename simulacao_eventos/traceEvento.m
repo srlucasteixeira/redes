@@ -14,8 +14,8 @@ while(size(e)>0)
     else
         fprintf('  Parent %d\n',c);
     end
-    Log_eventos(num)
-    Log_eventos(num).pct
+    e
+    e.pct
     c=c+1;
     e = e.parent;
     disp('----------------------------------------------')    

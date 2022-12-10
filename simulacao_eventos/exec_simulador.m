@@ -2,13 +2,15 @@
 function Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_final)
 
 
-  global eventos_executados;
-    global DEBUG
+global eventos_executados;
+global tempo_simulacao;
+global DEBUG
     
   if(DEBUG)
       
   end
-  
+  ultimo_impresso=0;
+  fprintf('|----------|\n|');
 % Simulacao discreta por eventos
   while 1
     [min_instante, min_indice] = min([Lista_eventos(:).instante]);
@@ -25,6 +27,11 @@ function Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_final)
 
     Novos_eventos = executa_evento(ev, tempo_atual);    % Retorna os novos eventos apos executar o ultimo evento
     eventos_executados =eventos_executados+ 1;
+    if strcmp(class(Novos_eventos),'double')
+        if Novos_eventos==-1
+            break
+        end
+    end
 %     if (ev.id>0)
 %         plotEventos(ev,tempo_atual);
 %     end
@@ -34,5 +41,10 @@ function Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_final)
     if ~isempty(Novos_eventos)
       Lista_eventos = [Lista_eventos;Novos_eventos];
     end
+    if ((tempo_atual/tempo_simulacao)-ultimo_impresso) > 10/100 % imprime progresso a cada 10% do tempo
+        fprintf('.');
+        ultimo_impresso=ultimo_impresso+10/100;
+    end
   end
+  fprintf('\n');
 end

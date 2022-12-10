@@ -1,7 +1,7 @@
 function simbolo =  mapeiaEventoSimbolo(evento)
 
-tipos    = {'RTS','CTS','DADOS','ACK','N_pct','N_cfg','T_ini','T_ini_r','FIM_NAV'};
-simbolos = 'ohdpO+xsO*';
+tipos    = {'RTS','CTS','DADOS','ACK','N_pct','N_cfg','T_ini','T_ini_r','FIM_NAV','COLISAO'};
+simbolos = 'ohdp<>+xs*O';
 
 if any(size(evento)>1)
     % gera legenda

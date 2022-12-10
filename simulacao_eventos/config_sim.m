@@ -1,6 +1,7 @@
 
 
 function Lista_eventos = config_sim(n, tempo_simulacao)
+rng default;
   Lista_eventos = [];
   for k=1:n
     e = evento_monta(0, 'N_cfg', k);
