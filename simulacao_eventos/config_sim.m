@@ -23,9 +23,11 @@ rng default;
         tamanho=max(round(desv_pad_quadro*randn+tam_quadro),1); % tamanho mínimo 1
         v=1:n; i=randi(n-1); v(id)=[]; % gera destino aleatorio que não pode ser igual à origem
         %keyboard
-        pct =  struct('src', id, 'dst', v(i), 'tam', tamanho, 'dados', []);
+        pct =  struct('src', id, 'dst', v(i), 'tam', tamanho, 'dados', [],...
+            'instante_gerado',0,'instante_entregue',0);
         %      evento_monta(t, tipo, id, pct,parent)
         e =    evento_monta(rand(1)*tempo_simulacao, 'N_pct', id, pct,[]);
+        e.pct.instante_gerado = e.instante;
         Lista_eventos = [Lista_eventos;e];
     end
   end

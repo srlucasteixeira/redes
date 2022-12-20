@@ -1,6 +1,7 @@
 
 function [NovosEventos] = executa_evento(evento, tempo_atual)
 global msg, global rede, global nos;
+global pacotes_entregues;
 global max_nova_tentativa;
 global taxa_bits;
 global tam_quadro;
@@ -261,6 +262,7 @@ switch tipo_evento
         nos(id).Tx = 'desocupado';
         nos(id).ocupado_ate = 0;
         nos(id).Rx = 'espera_ACK';
+        nos(id).stat.total_dados_enviados = nos(id).stat.total_dados_enviados+pct.tam;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   
     case 'R_DADOS_ini' %inicio de recepcao DE DADOS
@@ -330,6 +332,8 @@ switch tipo_evento
         nos(id).Rx = 'desocupado';
         nos(id).ocupado_ate = 0;
         nos(id).stat.total_dados_recebidos = nos(id).stat.total_dados_recebidos+pct.tam;
+        pct.instante_entregue=tempo_atual;
+        pacotes_entregues{end+1}=pct;
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         
         
@@ -361,7 +365,7 @@ switch tipo_evento
             if (pct.dst == id ) && strcmp(nos(id).Rx, 'espera_ACK')  % destino a estes dispositivo
                 X = pct.src; pct.src = pct.dst; pct.dst = X; % inverte origem e destino    POR ULTIMA VEZ!    
                 if (DEBUG==1)  fprintf('Pacote entregue com sucesso de %d para %d\n',pct.src,pct.dst); end
-                nos(id).stat.total_dados_enviados = nos(id).stat.total_dados_enviados+pct.tam;
+                
             end
             nos(id).Rx  = 'desocupado';
         elseif  strcmp(nos(id).Rx, 'colisao')
@@ -373,7 +377,9 @@ switch tipo_evento
                 %disp(['EV: COLISAO ACABOU no nó ' num2str(id) ' durante RTS'])
             end
         else
-            warning('ERRO: Estado Rx errado.');
+            %warning('ERRO: Estado Rx errado.');
+            nos(id).NAV_ate=0;
+            nos(id).Rx  = 'desocupado'; % ignora erro e segue em frente
         end
         if (length(nos(id).fila) > 0)  % existem mais pacotes para transmitir
             % agenda novo pacote para ser gerado imediatamente

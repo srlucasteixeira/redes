@@ -1,7 +1,7 @@
 
-function Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_final)
+function exec_simulador(Lista_eventos, tempo_final)
 
-
+global Log_eventos;
 global eventos_executados;
 global tempo_simulacao;
 global DEBUG
@@ -23,7 +23,8 @@ global DEBUG
     ev = Lista_eventos(min_indice);
     Lista_eventos(min_indice) = []; % Apaga o evento, sera executado.
     tempo_atual = min_instante;
-    Log_eventos = [Log_eventos;ev];
+    %Log_eventos = [Log_eventos;ev];
+    Log_eventos{end+1} = ev;
 
     Novos_eventos = executa_evento(ev, tempo_atual);    % Retorna os novos eventos apos executar o ultimo evento
     eventos_executados =eventos_executados+ 1;
@@ -37,6 +38,9 @@ global DEBUG
 %     end
     for k=1:length(Novos_eventos)
        Novos_eventos(k).parent=ev;
+       if sum(size(Novos_eventos(k).parent.parent))>0
+            Novos_eventos(k).parent.parent=[];
+       end
     end
     if ~isempty(Novos_eventos)
       Lista_eventos = [Lista_eventos;Novos_eventos];

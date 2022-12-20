@@ -15,6 +15,8 @@ disp('       Nó fonte envia dados')
 disp('       Nó destino responde ACK')
 
 
+global DEBUG;
+DEBUG=0;
 %PARAMETROS DE SIMULAÇÃO - geração aleatória de transmissões
 %global n;       n=10; % numero de nos da rede % substituído por num_estacoes
 %simulação do protocolo CSMA/CA
@@ -22,25 +24,31 @@ disp('       Nó destino responde ACK')
 % Parametros principais
 taxa_dados_gerados=[];
 taxa_dados_entregues=[];
+taxa_dados_enviados=[];
 eficiencia=[];
+total_dados_enviados=[];
+total_dados_recebidos=[];
+hist_nos=[];
+resultados=[];
+
 global tempo_simulacao;
-tempo_simulacao =100/1000; % tempo de simulacao (segundos)
+tempo_simulacao =1000/1000; % tempo de simulacao (segundos)
 %número total de estações
 global num_estacoes;
-num_estacoes = 3;
+num_estacoes = 10;
 %taxa de transmissão do meio em bits por segundo
 global taxa_bits;
 taxa_bits = 1e6;
 %tamanho médio do quadro em bits
 global tam_quadro;  % em bits
-tam_quadro = 100;
+tam_quadro = 1000;
 global desv_pad_quadro;
 desv_pad_quadro = 10;
 global max_nova_tentativa;  % tempo max. para esperar por liberação do canal
 max_nova_tentativa = 10*tam_quadro/taxa_bits;
 % duração de pacotes auxiliares
 global duracao_RTS, global duracao_CTS, global duracao_ACK;
-duracao_RTS=tam_quadro/taxa_bits/100;    % 1% do quadro médio
+duracao_RTS=tam_quadro/taxa_bits*0.05;    % 1% do quadro médio
 duracao_CTS=duracao_RTS;
 duracao_ACK=duracao_RTS;
 %tempo de transmissão do quadro em segundos
@@ -62,8 +70,9 @@ tempo_entre_quadros = 2*tempo_prop+0.001*tam_quadro/taxa_bits; %20\% do tempo de
 global fracao_taxa_quadro;  % fração da taxa máxima de dados gerada
 %fracao_taxa_quadro = 0.5;
 global taxa_quadro_atual;
+passo_taxa_quadro = 0.1;
 
-for fracao_taxa_quadro = 0.1:0.2:1;
+for fracao_taxa_quadro = 0.1:passo_taxa_quadro:1;
     taxa_quadro_atual = taxa_max_quadro * fracao_taxa_quadro;
     
     
@@ -79,14 +88,12 @@ for fracao_taxa_quadro = 0.1:0.2:1;
     quadros_gerados = 0;
     quadros_colididos = 0;
     
-    
     % Inicia o gerador de numeros aleatorios
     rand('state', 0);
     %prevS = rng(0)
     
-    global DEBUG;
-    DEBUG=0;
-    
+    global pacotes_entregues;
+    pacotes_entregues={};
     % Lista de eventos executados
     global Log_eventos;
     Log_eventos = [];
@@ -108,7 +115,8 @@ for fracao_taxa_quadro = 0.1:0.2:1;
     % keyboard
     
     % Executa a simulacao
-    Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_simulacao);
+    %Log_eventos = exec_simulador(Lista_eventos, Log_eventos, tempo_simulacao);
+    exec_simulador(Lista_eventos, tempo_simulacao);
     disp(sprintf('---Tempo da simulacao=%g segundos', etime(clock, tempo_inicial)));
     tic
     % for i=1:length (Log_eventos)
@@ -117,7 +125,6 @@ for fracao_taxa_quadro = 0.1:0.2:1;
     %         plotEventos(ev,ev.instante);
     %     end
     % end
-    drawnow
     if (DEBUG==1) plotEventos(Log_eventos,1); end
     
     %print_struct_array_contents(1);
@@ -125,5 +132,7 @@ for fracao_taxa_quadro = 0.1:0.2:1;
     %Log_eventos(:).tipo
     disp(['---Total de eventos=' num2str(eventos_executados)]);
     disp(sprintf('---Tempo da plot=%g segundos', etime(clock, tempo_inicial)));
+    disp('');
+    disp('');
     resumeResultados
 end
