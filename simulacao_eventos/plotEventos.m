@@ -1,9 +1,9 @@
-function plotEventos(Novos_eventos,textos)
+function plotEventos(Novos_eventos,textos,max_indice)
 % Imprime gráfico gerado a partir dos eventos
 %    plotEventos(Novos_eventos,textos)
 % textos=1  gera labels, textos=0 ou omitir este parametro não gera textos (mais rápido)
 % if gcf~=1
-    h=figure(1);
+    h=gcf;
     dcobj=datacursormode(h);
     %global myupdatefcnRunning
     %myupdatefcnRunning=1;
@@ -22,13 +22,16 @@ function plotEventos(Novos_eventos,textos)
 if nargin<2
     textos=0;
 end
+if nargin<3
+    max_indice=length(Novos_eventos);
+end
 
 ylim([0 0.001] );
 xlim([0 0.001] );
 global nos;
 global num_estacoes
-for i=1:length(Novos_eventos)
-    e=Novos_eventos(i);
+for i=1:max_indice%
+    e=Novos_eventos{i};
     tempo_atual=e.instante;
     cm=colormap(hsv(num_estacoes));% cria mapa de cores
     %keyboard
@@ -43,7 +46,7 @@ for i=1:length(Novos_eventos)
     'MarkerFaceColor',cor);
     set(h0,'UserData',i);
     hold on; grid on;
-    if (tempo_atual>textos) % escreve nome dos tipos de eventos
+    if (textos) % escreve nome dos tipos de eventos
         if size(e.pct)>0
             pcttxt=[num2str(e.pct.src) '>' num2str(e.pct.dst)]; 
         else
@@ -87,5 +90,5 @@ for i=1:length(Novos_eventos)
 end
 
 ylim([0.5 num_estacoes+0.5])
-xlim([Novos_eventos(1).instante Novos_eventos(end).instante] );
+xlim([Novos_eventos{1}.instante Novos_eventos{max_indice}.instante] );
 end

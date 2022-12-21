@@ -48,7 +48,9 @@ global max_nova_tentativa;  % tempo max. para esperar por liberação do canal
 max_nova_tentativa = 10*tam_quadro/taxa_bits;
 % duração de pacotes auxiliares
 global duracao_RTS, global duracao_CTS, global duracao_ACK;
-duracao_RTS=tam_quadro/taxa_bits*0.05;    % 1% do quadro médio
+global duracao_quadro_medio
+duracao_quadro_medio=tam_quadro/taxa_bits;
+duracao_RTS=duracao_quadro_medio*0.01;    % 1% do quadro médio
 duracao_CTS=duracao_RTS;
 duracao_ACK=duracao_RTS;
 %tempo de transmissão do quadro em segundos
@@ -60,7 +62,7 @@ taxa_max_quadro=(taxa_bits/tam_quadro/num_estacoes);
 
 
 % configuracao geométrica
-dist = 300; % m
+dist = 30000; % m
 global tempo_prop;
 tempo_prop = dist/3e8; %tempo de propagacao = distancia/velocidade do sinal
 
