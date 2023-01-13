@@ -1,4 +1,4 @@
-function [matriz,custo] = grafo_de_rede()
+function [matriz,custo,posX,posY] = grafo_de_rede()
 clear all; close all; clc;
 rand('twister', 0);
 

@@ -14,43 +14,59 @@ custo = [0 2 5 1 X X;...
 % Djkstra
 
 % matriz de interconexões e custos
-% [matriz,custo] = grafo_de_rede;
+%[matriz,custo,posX,posY] = grafo_de_rede;
 num_nos=length(custo)
 antecessor = zeros(1,num_nos)
-
+vetor_n=[];
 origem=1
 % destino=3
 % implementação
 T = origem;
 nos_nao_visitados=1:num_nos
-nos_nao_visitados(origem)=[]
+nos_nao_visitados(origem)=[];   % remove nó origem
 
 L(1:num_nos) = inf;
+L(origem) = 0;
+
 for n = nos_nao_visitados
    L(n) =   custo(origem,n);
+   if L(n) < Inf
+      antecessor(n) = origem; 
+   end
 end
 [valor,x] = min(L(nos_nao_visitados))
-T(end+1) = nos_nao_visitados(x); % guarda este como visitado
-nos_nao_visitados
+T(end+1) = nos_nao_visitados(x) % guarda este como visitado
 n=nos_nao_visitados(x)
+antecessor(n) = origem;
 nos_nao_visitados(find(nos_nao_visitados(x)==nos_nao_visitados)) = []; % remove dos não visitados
 nos_nao_visitados
-
+vetor_n(end+1)=n
+disp('Criar vetor "path"')
 while(length(nos_nao_visitados)>0)
+    fprintf('Visitando %d\n',n)
     L
     for x = nos_nao_visitados
-        if L(n) > L(x)+custo(x,n)
-            antecessor(n) = x;
-            L(n) = L(x)+custo(x,n);
+        [n L(n) x L(x) custo(x,n)]
+        if L(x) > L(n)+custo(x,n)
+            antecessor(x) = n;
+            L(x) = L(n)+custo(x,n);
         end
         %L(n) = min(L(n), L(x)+custo(x,n));
     end
-    L
+    %L
+    nos_nao_visitados
+    L(nos_nao_visitados)
     [valor,x] = min(L(nos_nao_visitados))
-
+    n=nos_nao_visitados(x)
+    vetor_n(end+1)=n
     T(end+1) = nos_nao_visitados(x); % guarda este como visitado
     nos_nao_visitados
     nos_nao_visitados(find(nos_nao_visitados(x)==nos_nao_visitados)) = []; % remove dos não visitados
     nos_nao_visitados
-    pause(1)
 end
+[valor,x] = max(L); % determina caminho com maior custo
+% desenha o caminho
+
+
+figure(1);hold on;
+
