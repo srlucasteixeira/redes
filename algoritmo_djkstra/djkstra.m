@@ -3,22 +3,22 @@
 clc; clear all
 % matriz de interconexões e custos exemplo da aula slide 14/16
 X = inf;% peso infinito
-custo = [0 2 5 1 X X;...
-       2 0 3 2 X X;...
-       5 3 0 3 1 5;...
-       1 2 3 0 1 X;...
-       X X 1 1 0 2
-       X X 5 X 2 0];
+% custo = [0 2 5 1 X X;...
+%        2 0 3 2 X X;...
+%        5 3 0 3 1 5;...
+%        1 2 3 0 1 X;...
+%        X X 1 1 0 2
+%        X X 5 X 2 0];
 
 % Implementação do algoritmo de Djkstra para descoberta do melhor caminho
 % Djkstra
 
 % matriz de interconexões e custos
-%[matriz,custo,posX,posY] = grafo_de_rede;
+[matriz,custo,posX,posY] = grafo_de_rede;
 num_nos=length(custo)
 antecessor = zeros(1,num_nos)
 vetor_n=[];
-origem=1
+origem=67
 % destino=3
 % implementação
 T = origem;
@@ -64,9 +64,19 @@ while(length(nos_nao_visitados)>0)
     nos_nao_visitados(find(nos_nao_visitados(x)==nos_nao_visitados)) = []; % remove dos não visitados
     nos_nao_visitados
 end
-[valor,x] = max(L); % determina caminho com maior custo
+[valor,final] = max(L); % determina caminho com maior custo
 % desenha o caminho
 
 
 figure(1);hold on;
-
+a=final;
+fprintf('\n\nO caminho terminado em %d tem custo %f\n\n',final,L(final))
+while a ~= origem
+    b = antecessor(a); 
+    line([posX(a) posX(b)], [posY(a) posY(b)], 'LineWidth', 3, 'Color', 'r');
+    text(mean([posX(a) posX(b)]),mean([posY(a) posY(b)]),sprintf('%1.2f',custo(a,b)))
+    a = b;
+%         else
+%             matriz(k,j) = 0;
+%             custo (k,j) = inf;
+end;
